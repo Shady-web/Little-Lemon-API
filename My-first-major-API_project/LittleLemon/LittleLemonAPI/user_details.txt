@@ -1,0 +1,27 @@
+Admin
+username: Adrian
+email: Adrian@littlelemon.com
+password: Adrian_lemon!
+token:6e60c27f3fe557f1e6a74c3774b70e7ae866288d
+
+Manager
+username: Billy
+email: Billy@littlelemon.com
+password: Billy_lemon!
+token:1a7741ae3228a7f36887f3f4aae2144110e4a83f
+
+Scott(delivery crew member)
+Scott_lemon!
+4b60f4cd562642c78eda22a72f2b9f5ca2ff33ab
+
+Sarah
+Sarah_lemon
+
+Parker
+Parker_lemon!
+
+regular customer
+Shady
+Shadysolos!
+"0e1cf91d915e69cea4a73a1d5245e8da7c7967d2"
+
