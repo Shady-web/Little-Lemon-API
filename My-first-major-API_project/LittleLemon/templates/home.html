@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Little Lemon — Mediterranean Restaurant{% endblock %}
+{% block page_id %}home{% endblock %}
+
+{% block content %}
+
+<!-- ====================================================
+     HERO
+     ==================================================== -->
+<section class="hero" aria-label="Hero">
+  <div class="hero-inner">
+    <!-- Text side -->
+    <div class="hero-text">
+      <span class="hero-badge">🍋 Chicago's Favourite Mediterranean</span>
+      <h1>Little Lemon</h1>
+      <p class="hero-subtitle">A Family Restaurant</p>
+      <p class="hero-desc">
+        We are a family-owned Mediterranean restaurant, focused on traditional recipes
+        served with a modern twist. Every plate tells a story of sun-soaked coasts
+        and generations of culinary passion.
+      </p>
+      <div class="hero-actions">
+        <a href="/menu/" class="btn btn-primary btn-lg">🍽️ Order Online</a>
+        <a href="#specials" class="btn btn-outline btn-lg">View Specials</a>
+      </div>
+    </div>
+
+    <!-- Visual side -->
+    <div class="hero-image-box">
+      <div class="hero-visual">
+        <span class="hero-visual-emoji">🥘</span>
+        <span class="hero-visual-label">Fresh Mediterranean Cuisine</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="hero-stats">
+    <div class="hero-stats-inner">
+      <div class="stat-item">
+        <span class="stat-number">25+</span>
+        <span class="stat-label">Menu Items</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">4.9★</span>
+        <span class="stat-label">Average Rating</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">7k+</span>
+        <span class="stat-label">Happy Customers</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">6 yrs</span>
+        <span class="stat-label">In Business</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================
+     SPECIALS
+     ==================================================== -->
+<section class="section-pad" id="specials" aria-label="This week's specials">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:48px;flex-wrap:wrap">
+      <div class="section-header" style="margin-bottom:0">
+        <span class="eyebrow">This Week</span>
+        <h2>Our Specials</h2>
+        <p>Handpicked favourites from our kitchen — fresh, vibrant, and full of Mediterranean soul.</p>
+      </div>
+      <a href="/menu/" class="btn btn-ghost">See Full Menu →</a>
+    </div>
+
+    <!-- Dynamically loaded via app.js -->
+    <div class="menu-grid" id="specials-grid">
+      <!-- Skeleton cards shown while loading -->
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================
+     TESTIMONIALS
+     ==================================================== -->
+<section class="section-pad testimonials" aria-label="Customer testimonials">
+  <div class="container">
+    <div class="section-header" style="text-align:center;align-items:center">
+      <span class="eyebrow">What People Say</span>
+      <h2>Loved by Foodies</h2>
+      <p>Don't just take our word for it — here's what our guests are saying.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "The grilled sea bass was absolutely divine. Every bite transported me straight to the
+          Mediterranean coast. The atmosphere is warm and the staff genuinely care."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:#FEF3C7">🧑</div>
+          <div>
+            <div class="testimonial-name">Marcus T.</div>
+            <div class="testimonial-location">Chicago, IL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "Little Lemon is our go-to for family dinners. The hummus and the lamb chops are
+          out of this world. Even our picky 8-year-old devoured everything on the plate!"
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:#D1FAE5">👩</div>
+          <div>
+            <div class="testimonial-name">Priya S.</div>
+            <div class="testimonial-location">Oak Park, IL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">
+          "I've been to restaurants all over the world, and the bruschetta here rivals anything
+          I've had in Rome. The lemon chicken is a must-order — pure perfection."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:#EDE9FE">🧔</div>
+          <div>
+            <div class="testimonial-name">James O.</div>
+            <div class="testimonial-location">Evanston, IL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★☆</div>
+        <p class="testimonial-text">
+          "Great food, lovely ambiance, and the online ordering is so easy to use.
+          Their baklava dessert is the best I've tasted outside of Istanbul — I always order extra."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:#FCE7F3">👩‍🦱</div>
+          <div>
+            <div class="testimonial-name">Sophie L.</div>
+            <div class="testimonial-location">Lincoln Park, IL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================
+     ABOUT
+     ==================================================== -->
+<section class="section-pad about" id="about" aria-label="About Little Lemon">
+  <div class="container">
+    <div class="about-inner">
+      <!-- Visual -->
+      <div class="about-visual">
+        <div class="about-img-main">🫒</div>
+        <div class="about-img-accent">🍋</div>
+      </div>
+
+      <!-- Text -->
+      <div class="about-text">
+        <div class="section-header">
+          <span class="eyebrow">Our Story</span>
+          <h2>A Family Tradition</h2>
+        </div>
+        <p>
+          Little Lemon was founded in 2018 by cousins Mario and Adriana, who grew up on their
+          grandmother's recipes in a small village outside Athens. After years of working in
+          kitchens across Europe, they brought those treasured flavours to Chicago.
+        </p>
+        <p>
+          Every dish on our menu is rooted in tradition — slow-cooked stews, wood-fired breads,
+          and seafood sourced daily from local markets. We believe food should be an experience,
+          not just a meal.
+        </p>
+        <p>
+          Our chefs combine age-old techniques with seasonal ingredients and a contemporary
+          sensibility, making each visit to Little Lemon a little different and always memorable.
+        </p>
+
+        <div class="about-highlights">
+          <div class="highlight-item">
+            <span class="highlight-icon">🌿</span>
+            <div>
+              <div class="highlight-title">Fresh Ingredients</div>
+              <div class="highlight-desc">Locally sourced, daily deliveries</div>
+            </div>
+          </div>
+          <div class="highlight-item">
+            <span class="highlight-icon">👨‍🍳</span>
+            <div>
+              <div class="highlight-title">Expert Chefs</div>
+              <div class="highlight-desc">Trained in Mediterranean kitchens</div>
+            </div>
+          </div>
+          <div class="highlight-item">
+            <span class="highlight-icon">🫶</span>
+            <div>
+              <div class="highlight-title">Family Owned</div>
+              <div class="highlight-desc">Personal service since 2018</div>
+            </div>
+          </div>
+          <div class="highlight-item">
+            <span class="highlight-icon">🌍</span>
+            <div>
+              <div class="highlight-title">Authentic Recipes</div>
+              <div class="highlight-desc">Handed down through generations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================
+     CTA BANNER
+     ==================================================== -->
+<section class="cta-banner section-pad" aria-label="Call to action">
+  <div class="cta-inner">
+    <div class="cta-text">
+      <h2>Ready to Order?</h2>
+      <p>
+        Browse our full menu, add your favourites to the cart, and enjoy an authentic
+        Mediterranean meal. Delivery available across Chicago.
+      </p>
+    </div>
+    <div class="cta-actions">
+      <a href="/menu/" class="btn btn-primary btn-lg">🍽️ View Full Menu</a>
+      <a href="/login/?tab=register" class="btn btn-outline btn-lg">Create Account</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

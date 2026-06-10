@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cart — Little Lemon{% endblock %}
+{% block page_id %}cart{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<section class="page-header">
+  <div class="page-header-inner">
+    <span class="eyebrow">Your Selection</span>
+    <h1>🛒 Shopping Cart</h1>
+    <p>Review your items and place your order below.</p>
+  </div>
+</section>
+
+<!-- Cart content -->
+<section class="section-pad">
+  <div class="container">
+    <div class="cart-layout">
+
+      <!-- Items column -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+          <h2 style="font-size:1.4rem">Cart Items</h2>
+          <button id="btn-clear-cart" class="btn btn-ghost btn-sm" style="color:#EF4444;border-color:#EF4444">
+            🗑️ Clear Cart
+          </button>
+        </div>
+
+        <div id="cart-container">
+          <!-- Loaded by JS -->
+        </div>
+
+        <div id="cart-empty" style="display:none">
+          <!-- Shown by JS when empty or not logged in -->
+        </div>
+      </div>
+
+      <!-- Summary column -->
+      <div>
+        <div class="cart-summary-box" id="cart-summary" style="display:none">
+          <div class="cart-summary-title">Order Summary</div>
+
+          <div class="cart-summary-row">
+            <span>Subtotal</span>
+            <span class="amount" id="cart-subtotal">$0.00</span>
+          </div>
+          <div class="cart-summary-row">
+            <span>Delivery fee</span>
+            <span class="amount" id="delivery-fee">$3.99</span>
+          </div>
+          <div class="cart-summary-row">
+            <span>Tax (8%)</span>
+            <span class="amount" id="cart-tax">included</span>
+          </div>
+          <div class="cart-summary-row total">
+            <span>Total</span>
+            <span class="amount" id="cart-total">$0.00</span>
+          </div>
+
+          <div class="cart-checkout-actions">
+            <button class="btn btn-primary btn-full btn-lg" id="btn-place-order">
+              🎉 Place Order
+            </button>
+            <a href="/menu/" class="btn btn-ghost btn-full">← Continue Shopping</a>
+          </div>
+
+          <div style="margin-top:20px;padding:14px;background:var(--off-white);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px">
+              <span>🔒</span><span style="font-weight:600">Secure checkout</span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">
+              Your order is protected. Estimated delivery: 25–35 minutes.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
