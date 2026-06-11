@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Little Lemon — A family-owned Mediterranean restaurant serving traditional recipes with a modern twist.">
+  <title>{% block title %}Little Lemon{% endblock %}</title>
+
+  <!-- Preconnect for fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400;500;600;700&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body data-page="{% block page_id %}{% endblock %}">
+
+<!-- ======================================================
+     NAVIGATION
+     ====================================================== -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="navbar-inner">
+    <!-- Logo -->
+    <a href="/" class="navbar-logo" aria-label="Little Lemon Home">
+      <span class="logo-lemon">🍋</span>
+      Little <span>Lemon</span>
+    </a>
+
+    <!-- Desktop links -->
+    <ul class="navbar-links" id="navbar-links" role="list">
+      <li><a href="/"        class="nav-link">Home</a></li>
+      <li><a href="/menu/"   class="nav-link">Menu</a></li>
+      <li>
+        <a href="/cart/" class="nav-link nav-cart-link" aria-label="Shopping cart">
+          🛒 Cart
+          <span class="badge cart-badge" style="display:none" aria-live="polite">0</span>
+        </a>
+      </li>
+      <li><a href="/orders/" class="nav-link">Orders</a></li>
+    </ul>
+
+    <!-- Auth area -->
+    <div class="navbar-actions">
+      <div id="nav-auth-area"></div>
+    </div>
+
+    <!-- Mobile toggle -->
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ======================================================
+     MAIN CONTENT
+     ====================================================== -->
+<main id="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ======================================================
+     FOOTER
+     ====================================================== -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-grid">
+    <!-- Brand -->
+    <div class="footer-brand">
+      <div class="footer-logo">🍋 Little <span>Lemon</span></div>
+      <p>A family-owned Mediterranean restaurant bringing authentic flavours to your table since 2018. Every dish is crafted with love and the finest ingredients.</p>
+      <div class="footer-social">
+        <a href="#" class="social-link" aria-label="Facebook">📘</a>
+        <a href="#" class="social-link" aria-label="Instagram">📸</a>
+        <a href="#" class="social-link" aria-label="Twitter">🐦</a>
+        <a href="#" class="social-link" aria-label="YouTube">▶️</a>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="footer-col">
+      <h4>Explore</h4>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu/">Menu</a></li>
+        <li><a href="/cart/">Cart</a></li>
+        <li><a href="/orders/">My Orders</a></li>
+        <li><a href="/login/">Sign In</a></li>
+      </ul>
+    </div>
+
+    <!-- Info -->
+    <div class="footer-col">
+      <h4>About</h4>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">Reservations</a></li>
+        <li><a href="#">Private Dining</a></li>
+        <li><a href="#">Gift Cards</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <div class="footer-contact-item">
+        <span class="contact-icon">📍</span>
+        <span>123 Mediterranean Ave,<br>Chicago, IL 60601</span>
+      </div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">📞</span>
+        <span>+1 (312) 555-0182</span>
+      </div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">✉️</span>
+        <span>hello@littlelemon.com</span>
+      </div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">🕐</span>
+        <span>Mon–Sun: 11 AM – 10 PM</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom-full">
+    <span>© 2025 Little Lemon Restaurant. All rights reserved. Made with 🍋 and ❤️</span>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

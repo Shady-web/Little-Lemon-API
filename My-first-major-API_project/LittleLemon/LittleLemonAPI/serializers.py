@@ -41,7 +41,7 @@ class OrderItemsSerializer(serializers.ModelSerializer):
         fields = ['menu_items', 'quantity', 'price']             
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items = OrderItemsSerializer(many = True, read_only=True, source='order')
+    order_items = OrderItemsSerializer(many=True, read_only=True, source='order_items')
     date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M")
     class Meta:
         model = Order

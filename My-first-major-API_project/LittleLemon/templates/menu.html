@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Menu — Little Lemon{% endblock %}
+{% block page_id %}menu{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<section class="page-header">
+  <div class="page-header-inner">
+    <span class="eyebrow">Explore Our Kitchen</span>
+    <h1>Our Menu</h1>
+    <p>Every dish crafted with love, using the finest Mediterranean ingredients.</p>
+  </div>
+</section>
+
+<!-- Menu content -->
+<section class="section-pad">
+  <div class="container">
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="category-tabs" id="category-tabs">
+        <!-- Populated by JS -->
+        <span class="cat-tab active">All Items</span>
+      </div>
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search dishes…"
+          aria-label="Search menu items"
+          autocomplete="off"
+        >
+      </div>
+    </div>
+
+    <!-- Menu grid -->
+    <div class="menu-grid" id="menu-grid">
+      <!-- Loaded dynamically by app.js -->
+    </div>
+
+  </div>
+</section>
+
+<!-- Info strip -->
+<section style="background:var(--off-white);padding:40px 0;border-top:1px solid var(--border)">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;text-align:center">
+      <div>
+        <div style="font-size:2rem;margin-bottom:8px">🚚</div>
+        <div style="font-weight:700;color:var(--dark);margin-bottom:4px">Free Delivery</div>
+        <div style="font-size:0.875rem;color:var(--text-muted)">On orders over $35</div>
+      </div>
+      <div>
+        <div style="font-size:2rem;margin-bottom:8px">⏱️</div>
+        <div style="font-weight:700;color:var(--dark);margin-bottom:4px">30 Min Delivery</div>
+        <div style="font-size:0.875rem;color:var(--text-muted)">Average delivery time</div>
+      </div>
+      <div>
+        <div style="font-size:2rem;margin-bottom:8px">🌿</div>
+        <div style="font-weight:700;color:var(--dark);margin-bottom:4px">Fresh Daily</div>
+        <div style="font-size:0.875rem;color:var(--text-muted)">Sourced every morning</div>
+      </div>
+      <div>
+        <div style="font-size:2rem;margin-bottom:8px">♻️</div>
+        <div style="font-weight:700;color:var(--dark);margin-bottom:4px">Eco Packaging</div>
+        <div style="font-size:0.875rem;color:var(--text-muted)">100% compostable</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
