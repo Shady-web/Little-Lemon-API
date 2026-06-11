@@ -17,8 +17,8 @@ local_settings.py
 db.sqlite3
 media/
 
-# Static collected files
-staticfiles/
+# Static collected files (keep staticfiles/ — Vercel serves from it)
+# staticfiles/
 static_root/
 
 # Distribution / packaging
