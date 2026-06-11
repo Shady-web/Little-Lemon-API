@@ -1,8 +1,6 @@
 import os
 import sys
-import shutil
 
-# Locate the Django project relative to this file
 repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 django_project = os.path.join(repo_root, 'My-first-major-API_project', 'LittleLemon')
 sys.path.insert(0, django_project)
@@ -10,11 +8,20 @@ sys.path.insert(0, django_project)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LittleLemon.settings')
 os.environ.setdefault('VERCEL', '1')
 
-# SQLite is read-only in the Vercel Lambda — copy it to /tmp so writes work.
-db_source = os.path.join(django_project, 'db.sqlite3')
 db_dest = '/tmp/db.sqlite3'
-if os.path.exists(db_source) and not os.path.exists(db_dest):
-    shutil.copy2(db_source, db_dest)
+is_fresh_db = not os.path.exists(db_dest)
+
+if is_fresh_db:
+    import django
+    django.setup()
+    from django.core.management import call_command
+    call_command('migrate', '--run-syncdb', verbosity=0)
+    try:
+        from LittleLemonAPI.models import MenuItems
+        if not MenuItems.objects.exists():
+            call_command('loaddata', 'initial_data', verbosity=0)
+    except Exception as e:
+        print(f"[init] fixture load failed: {e}")
 
 from django.core.wsgi import get_wsgi_application
 app = get_wsgi_application()

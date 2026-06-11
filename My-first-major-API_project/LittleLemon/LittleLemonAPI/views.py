@@ -29,10 +29,10 @@ class CategoriesView(generics.ListCreateAPIView, generics.DestroyAPIView):
 
 class MenuItemsView(generics.ListCreateAPIView):
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
-    queryset = MenuItems.objects.all()
+    queryset = MenuItems.objects.all().order_by('id')
     serializer_class = MenuItemsSerializer
     ordering_fields = ['price', 'inventory']
-    search_fields = ['category__title']
+    search_fields = ['title', 'category__title']
 
     def get_permissions(self):
         permission_classes = []

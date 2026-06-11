@@ -1,0 +1,35 @@
+[
+  {"model": "LittleLemonAPI.category", "pk": 1, "fields": {"slug": "starters",   "title": "Starters"}},
+  {"model": "LittleLemonAPI.category", "pk": 2, "fields": {"slug": "mains",      "title": "Main Course"}},
+  {"model": "LittleLemonAPI.category", "pk": 3, "fields": {"slug": "seafood",    "title": "Seafood"}},
+  {"model": "LittleLemonAPI.category", "pk": 4, "fields": {"slug": "desserts",   "title": "Desserts"}},
+  {"model": "LittleLemonAPI.category", "pk": 5, "fields": {"slug": "drinks",     "title": "Drinks"}},
+
+  {"model": "LittleLemonAPI.menuitems", "pk": 1,  "fields": {"title": "Greek Salad",           "price": "12.99", "featured": true,  "inventory": 30, "category": 1}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 2,  "fields": {"title": "Bruschetta al Pomodoro","price": "9.99",  "featured": false, "inventory": 25, "category": 1}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 3,  "fields": {"title": "Hummus & Warm Pita",    "price": "10.99", "featured": false, "inventory": 20, "category": 1}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 4,  "fields": {"title": "Falafel Plate",         "price": "11.99", "featured": false, "inventory": 18, "category": 1}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 5,  "fields": {"title": "Stuffed Grape Leaves",  "price": "10.49", "featured": false, "inventory": 22, "category": 1}},
+
+  {"model": "LittleLemonAPI.menuitems", "pk": 6,  "fields": {"title": "Grilled Lamb Chops",    "price": "26.99", "featured": true,  "inventory": 10, "category": 2}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 7,  "fields": {"title": "Chicken Souvlaki",      "price": "18.99", "featured": false, "inventory": 15, "category": 2}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 8,  "fields": {"title": "Beef Moussaka",         "price": "17.99", "featured": false, "inventory": 12, "category": 2}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 9,  "fields": {"title": "Pasta Arrabiata",       "price": "14.99", "featured": false, "inventory": 20, "category": 2}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 10, "fields": {"title": "Mushroom Risotto",      "price": "16.99", "featured": false, "inventory": 14, "category": 2}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 11, "fields": {"title": "Lemon Herb Chicken",    "price": "19.99", "featured": false, "inventory": 16, "category": 2}},
+
+  {"model": "LittleLemonAPI.menuitems", "pk": 12, "fields": {"title": "Grilled Sea Bass",      "price": "24.99", "featured": true,  "inventory": 8,  "category": 3}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 13, "fields": {"title": "Shrimp Saganaki",       "price": "21.99", "featured": false, "inventory": 10, "category": 3}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 14, "fields": {"title": "Grilled Salmon Fillet", "price": "23.99", "featured": false, "inventory": 9,  "category": 3}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 15, "fields": {"title": "Calamari Fritti",       "price": "14.99", "featured": false, "inventory": 15, "category": 3}},
+
+  {"model": "LittleLemonAPI.menuitems", "pk": 16, "fields": {"title": "Lemon Tart",            "price": "7.99",  "featured": false, "inventory": 20, "category": 4}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 17, "fields": {"title": "Baklava",               "price": "5.99",  "featured": false, "inventory": 25, "category": 4}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 18, "fields": {"title": "Chocolate Lava Cake",   "price": "8.99",  "featured": false, "inventory": 18, "category": 4}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 19, "fields": {"title": "Panna Cotta",           "price": "6.99",  "featured": false, "inventory": 20, "category": 4}},
+
+  {"model": "LittleLemonAPI.menuitems", "pk": 20, "fields": {"title": "Fresh Lemonade",        "price": "4.99",  "featured": false, "inventory": 50, "category": 5}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 21, "fields": {"title": "Sparkling Water",       "price": "2.99",  "featured": false, "inventory": 50, "category": 5}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 22, "fields": {"title": "Mint Lemonade",         "price": "5.49",  "featured": false, "inventory": 40, "category": 5}},
+  {"model": "LittleLemonAPI.menuitems", "pk": 23, "fields": {"title": "Turkish Coffee",        "price": "3.99",  "featured": false, "inventory": 45, "category": 5}}
+]
