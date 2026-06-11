@@ -15,7 +15,7 @@ if is_fresh_db:
     import django
     django.setup()
     from django.core.management import call_command
-    call_command('migrate', '--run-syncdb', verbosity=0)
+    call_command('migrate', verbosity=0)
     try:
         from LittleLemonAPI.models import MenuItems
         if not MenuItems.objects.exists():
