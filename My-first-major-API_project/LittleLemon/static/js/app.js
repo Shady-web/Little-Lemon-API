@@ -309,26 +309,48 @@ function renderSkeletons(n = 6) {
 /* ================================================================
    PAGE: HOME
    ================================================================ */
+function pickDailySpecials(items) {
+  if (!items.length) return [];
+  // Deterministic seed from today's date — changes every 24 hrs
+  const today = new Date().toDateString();
+  let seed = today.split('').reduce((s, c) => (s * 31 + c.charCodeAt(0)) | 0, 0);
+  seed = Math.abs(seed);
+  const n = items.length;
+  // Pick 3 distinct indices using the seed
+  const indices = new Set();
+  let attempts = 0;
+  while (indices.size < Math.min(3, n) && attempts < 30) {
+    indices.add((seed + attempts * 7) % n);
+    attempts++;
+  }
+  return [...indices].map(i => items[i]);
+}
+
 async function initHome() {
-  const grid = document.getElementById('specials-grid');
+  const grid      = document.getElementById('specials-grid');
+  const dateLabel = document.getElementById('specials-date');
   if (!grid) return;
+
+  if (dateLabel) {
+    dateLabel.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
 
   grid.innerHTML = renderSkeletons(3);
 
   try {
-    const data = await API.get(`${API.base}/menu-items/?featured=true`);
-    const items = (data.results || data).filter(i => i.featured).slice(0, 3);
+    const data  = await API.get(`${API.base}/menu-items/`);
+    const all   = data.results || data;
 
-    if (!items.length) {
-      const all = await API.get(`${API.base}/menu-items/`);
-      const fallback = (all.results || all).slice(0, 3);
-      grid.innerHTML = fallback.map(i => renderMenuCard(i)).join('');
-    } else {
-      grid.innerHTML = items.map(i => renderMenuCard(i)).join('');
+    if (!all.length) {
+      grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">No menu items available yet.</p>';
+      return;
     }
 
+    const specials = pickDailySpecials(all);
+    grid.innerHTML = specials.map(i => renderMenuCard(i)).join('');
+
     grid.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', async () => {
         const id    = parseInt(btn.dataset.id);
         const price = btn.dataset.price;
         btn.disabled = true;
@@ -344,7 +366,7 @@ async function initHome() {
       });
     });
   } catch {
-    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">Could not load specials.</p>';
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Could not load specials.</p>';
   }
 }
 
