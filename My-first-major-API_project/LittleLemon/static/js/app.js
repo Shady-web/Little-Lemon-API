@@ -503,7 +503,7 @@ async function initCart() {
     let subtotal = 0;
     container.innerHTML = items.map(item => {
       subtotal += parseFloat(item.price || 0);
-      const menuItem = item.menu_item || {};
+      const menuItem = item.menu_item_details || {};
       const title    = menuItem.title || `Item #${item.menu_items}`;
       const cat      = menuItem.category?.title || '';
       const emoji    = itemEmoji({ title, id: item.menu_items });
@@ -532,19 +532,102 @@ async function initCart() {
     document.getElementById('delivery-fee').textContent = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Free';
   }
 
-  orderBtn?.addEventListener('click', async () => {
-    orderBtn.disabled = true;
-    orderBtn.innerHTML = '<span class="spinner"></span> Placing Order…';
+  /* ── Checkout Modal ─────────────────────────────── */
+  const modal        = document.getElementById('checkout-modal');
+  const modalClose   = document.getElementById('modal-close-btn');
+  const payForm      = document.getElementById('payment-form');
+  const payBtn       = document.getElementById('btn-pay-now');
+  const modalTotal   = document.getElementById('modal-total');
+  const cardNumIn    = document.getElementById('card-number');
+  const cardNameIn   = document.getElementById('card-name');
+  const cardExpIn    = document.getElementById('card-expiry');
+  const cardCvvIn    = document.getElementById('card-cvv');
+  const ccCard       = document.getElementById('cc-card');
+  const ccNumDisp    = document.getElementById('cc-num-display');
+  const ccNameDisp   = document.getElementById('cc-name-display');
+  const ccExpDisp    = document.getElementById('cc-exp-display');
+  const ccCvvDisp    = document.getElementById('cc-cvv-display');
+  const successOv    = document.getElementById('success-overlay');
+  const successNum   = document.getElementById('success-order-num');
+
+  function openModal() {
+    if (!modal) return;
+    modalTotal && (modalTotal.textContent = totalEl?.textContent || '$0.00');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.classList.add('open'), 10);
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove('open');
+    setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+  }
+
+  orderBtn?.addEventListener('click', openModal);
+  modalClose?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  // Live card preview
+  cardNumIn?.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+    const disp = v.padEnd(16, '•');
+    ccNumDisp && (ccNumDisp.textContent = disp.replace(/(.{4})/g, '$1 ').trim());
+  });
+  cardNameIn?.addEventListener('input', e => {
+    ccNameDisp && (ccNameDisp.textContent = e.target.value.toUpperCase() || 'YOUR NAME');
+  });
+  cardExpIn?.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+    e.target.value = v;
+    ccExpDisp && (ccExpDisp.textContent = v || 'MM/YY');
+  });
+  cardCvvIn?.addEventListener('focus', () => ccCard?.classList.add('flipped'));
+  cardCvvIn?.addEventListener('blur',  () => ccCard?.classList.remove('flipped'));
+  cardCvvIn?.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g, '').substring(0, 3);
+    e.target.value = v;
+    ccCvvDisp && (ccCvvDisp.textContent = v.replace(/./g, '•') || '•••');
+  });
+
+  payForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    // Basic client-side validation
+    const num  = (cardNumIn?.value || '').replace(/\s/g, '');
+    const name = cardNameIn?.value.trim() || '';
+    const exp  = cardExpIn?.value || '';
+    const cvv  = cardCvvIn?.value || '';
+    if (num.length < 16) { Toast.error('Please enter a valid 16-digit card number.'); return; }
+    if (!name)            { Toast.error('Please enter the cardholder name.'); return; }
+    if (exp.length < 5)   { Toast.error('Please enter a valid expiry date (MM/YY).'); return; }
+    if (cvv.length < 3)   { Toast.error('Please enter a valid 3-digit CVV.'); return; }
+
+    payBtn.disabled = true;
+    payBtn.innerHTML = '<span class="spinner"></span> Processing…';
+
     try {
-      await API.post(`${API.base}/orders`, {});
+      const order = await API.post(`${API.base}/orders`, {});
       Cart.clearLocal();
-      Toast.success('Order placed successfully! 🎉');
-      setTimeout(() => window.location.href = '/orders/', 1200);
+      closeModal();
+      if (successOv) {
+        successNum && (successNum.textContent = order?.id ? `Order #${order.id}` : '');
+        successOv.style.display = 'flex';
+        setTimeout(() => successOv.classList.add('open'), 10);
+      } else {
+        Toast.success('Order placed successfully! 🎉');
+        setTimeout(() => window.location.href = '/orders/', 1200);
+      }
     } catch (err) {
-      Toast.error(err.data?.message || 'Failed to place order. Please try again.');
-      orderBtn.disabled = false;
-      orderBtn.innerHTML = '🎉 Place Order';
+      Toast.error(err.data?.message || 'Payment failed. Please try again.');
+      payBtn.disabled = false;
+      payBtn.innerHTML = '🔒 Pay Now';
     }
+  });
+
+  document.getElementById('btn-view-orders')?.addEventListener('click', () => {
+    window.location.href = '/orders/';
   });
 
   clearBtn?.addEventListener('click', async () => {

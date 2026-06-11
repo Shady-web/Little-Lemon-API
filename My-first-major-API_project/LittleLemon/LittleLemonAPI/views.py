@@ -168,16 +168,14 @@ class OrdersView(generics.RetrieveUpdateDestroyAPIView, generics.ListCreateAPIVi
             result['total'] = total
             return Response(order_serializer.data)
             
-        #return Response(order_serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
-    def get_total_price(self, user): #calculates the total price for the order
+    def get_total_price(self, user):
         total = 0
         items = Cart.objects.all().filter(user=user).all()
         for item in items.values():
-            total += item['price']   
-            return total 
-        
-        #return Response({"message":"Orders created successfully and items in cart has been deleted"}, status=status.HTTP_201_CREATED)
+            total += item['price']
+        return total
 class SingleOrdersView(generics.RetrieveUpdateAPIView):
             queryset = Order.objects.all()
             serializer_class=OrderSerializer

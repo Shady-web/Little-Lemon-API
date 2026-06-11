@@ -82,4 +82,106 @@
   </div>
 </section>
 
+<!-- ── Checkout Modal ──────────────────────────────────────── -->
+<div class="modal-backdrop" id="checkout-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+  <div class="modal-container">
+    <button class="modal-close" id="modal-close-btn" aria-label="Close modal">✕</button>
+
+    <div class="modal-header">
+      <h2 id="modal-heading">💳 Secure Checkout</h2>
+      <p>Your information is encrypted and secure</p>
+    </div>
+
+    <!-- Animated Credit Card Preview -->
+    <div class="cc-preview-wrapper">
+      <div class="cc-card" id="cc-card">
+        <div class="cc-front">
+          <div class="cc-logo">🍋 Little Lemon</div>
+          <div class="cc-chip">
+            <div class="chip-body">
+              <div class="chip-line"></div>
+              <div class="chip-line"></div>
+              <div class="chip-line"></div>
+            </div>
+          </div>
+          <div class="cc-number-display" id="cc-num-display">•••• •••• •••• ••••</div>
+          <div class="cc-bottom">
+            <div class="cc-holder">
+              <div class="cc-label">Card Holder</div>
+              <div class="cc-name-display" id="cc-name-display">YOUR NAME</div>
+            </div>
+            <div class="cc-expiry">
+              <div class="cc-label">Expires</div>
+              <div class="cc-exp-display" id="cc-exp-display">MM/YY</div>
+            </div>
+          </div>
+        </div>
+        <div class="cc-back">
+          <div class="cc-stripe"></div>
+          <div class="cc-sig-area">
+            <div class="cc-sig-line"></div>
+            <div class="cc-cvv-box">
+              <div class="cc-label" style="color:var(--dark);font-size:0.65rem">CVV</div>
+              <div class="cc-cvv-display" id="cc-cvv-display">•••</div>
+            </div>
+          </div>
+          <div class="cc-logo cc-logo-back">🍋 Little Lemon</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Form -->
+    <form id="payment-form" class="payment-form" autocomplete="off" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="card-number">Card Number</label>
+        <input type="text" id="card-number" class="form-input" placeholder="1234 5678 9012 3456"
+               maxlength="19" inputmode="numeric" autocomplete="cc-number">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="card-name">Name on Card</label>
+        <input type="text" id="card-name" class="form-input" placeholder="John Doe"
+               autocomplete="cc-name">
+      </div>
+      <div class="payment-form-row">
+        <div class="form-group">
+          <label class="form-label" for="card-expiry">Expiry Date</label>
+          <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY"
+                 maxlength="5" inputmode="numeric" autocomplete="cc-exp">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="card-cvv">CVV</label>
+          <input type="text" id="card-cvv" class="form-input" placeholder="•••"
+                 maxlength="3" inputmode="numeric" autocomplete="cc-csc">
+        </div>
+      </div>
+
+      <div class="payment-total-row">
+        <span>Total to pay</span>
+        <strong id="modal-total">$0.00</strong>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-pay-now" style="margin-top:8px">
+        🔒 Pay Now
+      </button>
+      <p class="payment-security-note">🔐 256-bit SSL encryption · PCI DSS compliant</p>
+    </form>
+  </div>
+</div>
+
+<!-- ── Order Success Overlay ───────────────────────────────── -->
+<div class="success-overlay" id="success-overlay" style="display:none" role="dialog" aria-modal="true">
+  <div class="success-card">
+    <div class="success-burst">🎉</div>
+    <div class="success-checkmark">
+      <svg viewBox="0 0 52 52" class="check-svg"><circle cx="26" cy="26" r="25" fill="none"/><path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+    </div>
+    <h2>Order Placed!</h2>
+    <p>Your food is being lovingly prepared. Estimated delivery: <strong>25–35 minutes</strong> 🛵</p>
+    <div class="success-order-num" id="success-order-num"></div>
+    <button class="btn btn-primary btn-lg" id="btn-view-orders" style="margin-top:28px;min-width:200px">
+      📦 View My Orders
+    </button>
+  </div>
+</div>
+
 {% endblock %}
