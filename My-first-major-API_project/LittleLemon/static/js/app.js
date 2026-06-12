@@ -223,6 +223,32 @@ const Nav = {
 const FOOD_EMOJIS = ['🍽️','🥗','🍝','🥙','🫒','🍋','🧆','🥘','🫕','🍤','🥩','🍣'];
 const COLORS = ['cat-bg-1','cat-bg-2','cat-bg-3','cat-bg-4','cat-bg-5','cat-bg-6'];
 
+const FOOD_IMAGES = {
+  'greek salad':           'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=400&q=80',
+  'bruschetta al pomodoro':'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?auto=format&fit=crop&w=400&q=80',
+  'hummus & warm pita':    'https://images.unsplash.com/photo-1505253758473-96b7015fcd40?auto=format&fit=crop&w=400&q=80',
+  'falafel plate':         'https://images.unsplash.com/photo-1614777986387-015c2a89b851?auto=format&fit=crop&w=400&q=80',
+  'stuffed grape leaves':  'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=400&q=80',
+  'grilled lamb chops':    'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80',
+  'chicken souvlaki':      'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=400&q=80',
+  'beef moussaka':         'https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=400&q=80',
+  'pasta arrabiata':       'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&w=400&q=80',
+  'mushroom risotto':      'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=400&q=80',
+  'lemon herb chicken':    'https://images.unsplash.com/photo-1598103442097-8b74394b95c9?auto=format&fit=crop&w=400&q=80',
+  'grilled sea bass':      'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=400&q=80',
+  'shrimp saganaki':       'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=400&q=80',
+  'grilled salmon fillet': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=400&q=80',
+  'calamari fritti':       'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=400&q=80',
+  'lemon tart':            'https://images.unsplash.com/photo-1519915028121-7d3463d20b13?auto=format&fit=crop&w=400&q=80',
+  'baklava':               'https://images.unsplash.com/photo-1598143873985-2db6d4e1d1ec?auto=format&fit=crop&w=400&q=80',
+  'chocolate lava cake':   'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=400&q=80',
+  'panna cotta':           'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80',
+  'fresh lemonade':        'https://images.unsplash.com/photo-1529396736524-9a85f1e76a9d?auto=format&fit=crop&w=400&q=80',
+  'sparkling water':       'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80',
+  'mint lemonade':         'https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=400&q=80',
+  'turkish coffee':        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80',
+};
+
 function itemEmoji(item) {
   const title = (item.title || '').toLowerCase();
   if (title.includes('salad'))      return '🥗';
@@ -264,9 +290,15 @@ function renderMenuCard(item, inCart = false) {
   const emoji  = itemEmoji(item);
   const color  = itemColor(item);
   const outOfStock = item.inventory <= 0;
+  const imgUrl = FOOD_IMAGES[(item.title || '').toLowerCase()];
+  const photoHtml = imgUrl
+    ? `<img src="${imgUrl}" alt="${item.title}" loading="lazy" class="card-photo"
+            onerror="this.parentElement.classList.remove('has-photo');this.remove()">`
+    : '';
   return `
     <div class="menu-card fade-in-up" data-id="${item.id}">
-      <div class="menu-card-img ${color}">
+      <div class="menu-card-img ${color}${imgUrl ? ' has-photo' : ''}">
+        ${photoHtml}
         <span class="card-emoji">${emoji}</span>
         ${item.featured ? '<span class="featured-badge">⭐ Featured</span>' : ''}
       </div>
@@ -337,37 +369,53 @@ async function initHome() {
 
   grid.innerHTML = renderSkeletons(3);
 
-  try {
-    const data  = await API.get(`${API.base}/menu-items/`);
-    const all   = data.results || data;
-
-    if (!all.length) {
-      grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">No menu items available yet.</p>';
-      return;
+  let data;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      data = await API.get(`${API.base}/menu-items/`);
+      break;
+    } catch (err) {
+      if (attempt === 2) {
+        console.error('[specials] load failed after retries:', err);
+        grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Could not load specials. Please refresh.</p>';
+        return;
+      }
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
     }
-
-    const specials = pickDailySpecials(all);
-    grid.innerHTML = specials.map(i => renderMenuCard(i)).join('');
-
-    grid.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id    = parseInt(btn.dataset.id);
-        const price = btn.dataset.price;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
-        const ok = await Cart.add(id, price);
-        if (ok) {
-          btn.innerHTML = '✅ In Cart';
-          btn.classList.add('added');
-        } else {
-          btn.innerHTML = '🛒 Add to Cart';
-          btn.disabled = false;
-        }
-      });
-    });
-  } catch {
-    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Could not load specials.</p>';
   }
+
+  const all = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+
+  if (!all.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">No menu items available yet.</p>';
+    return;
+  }
+
+  const specials = pickDailySpecials(all).filter(Boolean);
+  try {
+    grid.innerHTML = specials.map(i => renderMenuCard(i)).join('');
+  } catch (renderErr) {
+    console.error('[specials] render error:', renderErr);
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Could not display specials.</p>';
+    return;
+  }
+
+  grid.querySelectorAll('.btn-add-cart').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id    = parseInt(btn.dataset.id);
+      const price = btn.dataset.price;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+      const ok = await Cart.add(id, price);
+      if (ok) {
+        btn.innerHTML = '✅ In Cart';
+        btn.classList.add('added');
+      } else {
+        btn.innerHTML = '🛒 Add to Cart';
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 /* ================================================================
