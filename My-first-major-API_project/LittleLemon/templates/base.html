@@ -43,6 +43,10 @@
 
     <!-- Auth area -->
     <div class="navbar-actions">
+      <button class="nav-cart-btn" id="nav-cart-btn" aria-label="Your cart">
+        🛒
+        <span class="cart-badge" style="display:none">0</span>
+      </button>
       <div id="nav-auth-area"></div>
     </div>
 
@@ -52,6 +56,27 @@
     </button>
   </div>
 </nav>
+
+<!-- Mini Cart Panel -->
+<div id="cart-panel" class="cart-panel" role="dialog" aria-label="Shopping cart">
+  <div class="cart-panel-header">
+    <h4>🛒 Your Cart</h4>
+    <button class="cart-panel-close" id="cart-panel-close" aria-label="Close">✕</button>
+  </div>
+  <div class="cart-panel-body" id="cart-panel-body">
+    <div style="padding:32px;text-align:center"><div class="spinner"></div></div>
+  </div>
+  <div class="cart-panel-footer" id="cart-panel-footer" style="display:none">
+    <div class="cp-totals">
+      <div class="cp-row"><span>Subtotal</span><span id="cp-subtotal">$0.00</span></div>
+      <div class="cp-row"><span>Delivery</span><span>$3.99</span></div>
+      <div class="cp-row cp-row-total"><span>Total</span><span id="cp-total">$3.99</span></div>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-cp-checkout" style="margin-top:16px">🎉 Proceed to Checkout</button>
+    <a href="/cart/" class="btn btn-ghost btn-full btn-sm" style="text-align:center;margin-top:8px;display:block">View Full Cart</a>
+  </div>
+</div>
+<div class="cart-panel-overlay" id="cart-panel-overlay"></div>
 
 <!-- ======================================================
      MAIN CONTENT
@@ -130,6 +155,158 @@
 
 <!-- Toast container -->
 <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ── Global Checkout Modal ────────────────────── -->
+<div class="modal-backdrop" id="checkout-modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal-container">
+    <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
+
+    <!-- Step indicator -->
+    <div class="checkout-steps-bar" id="checkout-steps-bar">
+      <div class="cs-step active" id="csstep-1"><span class="cs-num">1</span><span class="cs-lbl">Delivery</span></div>
+      <div class="cs-line"></div>
+      <div class="cs-step" id="csstep-2"><span class="cs-num">2</span><span class="cs-lbl">Payment</span></div>
+      <div class="cs-line"></div>
+      <div class="cs-step" id="csstep-3"><span class="cs-num">3</span><span class="cs-lbl">Confirm</span></div>
+    </div>
+
+    <!-- Step 1: Delivery -->
+    <div id="co-step-1" class="co-step">
+      <div class="modal-header">
+        <h2>🏠 Delivery Details</h2>
+        <p>Where should we deliver your order?</p>
+      </div>
+      <div class="form-group"><label class="form-label">Full Name</label>
+        <input type="text" id="del-name" class="form-input" placeholder="John Smith"></div>
+      <div class="form-group"><label class="form-label">Street Address</label>
+        <input type="text" id="del-address" class="form-input" placeholder="123 Main St, Apt 4B"></div>
+      <div class="payment-form-row">
+        <div class="form-group"><label class="form-label">City</label>
+          <input type="text" id="del-city" class="form-input" placeholder="Chicago" value="Chicago"></div>
+        <div class="form-group"><label class="form-label">ZIP Code</label>
+          <input type="text" id="del-zip" class="form-input" placeholder="60601" maxlength="10"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Phone Number</label>
+        <input type="tel" id="del-phone" class="form-input" placeholder="+1 (312) 555-0000"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="btn-del-next" style="margin-top:8px">Continue to Payment →</button>
+    </div>
+
+    <!-- Step 2: Payment Method -->
+    <div id="co-step-2" class="co-step" style="display:none">
+      <div class="modal-header">
+        <h2>💳 Payment Method</h2>
+        <p>How would you like to pay?</p>
+      </div>
+      <div class="pay-method-grid">
+        <button class="pay-method-btn" id="opt-card">
+          <span class="pay-method-icon">💳</span>
+          <span class="pay-method-title">Pay by Card</span>
+          <span class="pay-method-desc">Visa · Mastercard · Amex</span>
+        </button>
+        <button class="pay-method-btn" id="opt-transfer">
+          <span class="pay-method-icon">🏦</span>
+          <span class="pay-method-title">Bank Transfer</span>
+          <span class="pay-method-desc">Direct bank payment</span>
+        </button>
+      </div>
+      <button class="btn btn-ghost btn-full" id="btn-pay-back" style="margin-top:12px">← Back</button>
+    </div>
+
+    <!-- Step 3a: Card -->
+    <div id="co-step-3-card" class="co-step" style="display:none">
+      <div class="modal-header">
+        <h2>💳 Card Details</h2>
+        <p>Your information is encrypted and secure</p>
+      </div>
+      <div class="cc-preview-wrapper">
+        <div class="cc-card" id="cc-card">
+          <div class="cc-front">
+            <div class="cc-logo">🍋 Little Lemon</div>
+            <div class="cc-chip"><div class="chip-body"><div class="chip-line"></div><div class="chip-line"></div><div class="chip-line"></div></div></div>
+            <div class="cc-number-display" id="cc-num-display">•••• •••• •••• ••••</div>
+            <div class="cc-bottom">
+              <div class="cc-holder"><div class="cc-label">Card Holder</div><div class="cc-name-display" id="cc-name-display">YOUR NAME</div></div>
+              <div class="cc-expiry"><div class="cc-label">Expires</div><div class="cc-exp-display" id="cc-exp-display">MM/YY</div></div>
+            </div>
+          </div>
+          <div class="cc-back">
+            <div class="cc-stripe"></div>
+            <div class="cc-sig-area"><div class="cc-sig-line"></div><div class="cc-cvv-box"><div class="cc-label" style="color:var(--dark);font-size:0.65rem">CVV</div><div class="cc-cvv-display" id="cc-cvv-display">•••</div></div></div>
+            <div class="cc-logo cc-logo-back">🍋 Little Lemon</div>
+          </div>
+        </div>
+      </div>
+      <form id="payment-form" class="payment-form" autocomplete="off" novalidate>
+        <div class="form-group"><label class="form-label" for="card-number">Card Number</label>
+          <input type="text" id="card-number" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric"></div>
+        <div class="form-group"><label class="form-label" for="card-name">Name on Card</label>
+          <input type="text" id="card-name" class="form-input" placeholder="John Doe"></div>
+        <div class="payment-form-row">
+          <div class="form-group"><label class="form-label" for="card-expiry">Expiry</label>
+            <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY" maxlength="5" inputmode="numeric"></div>
+          <div class="form-group"><label class="form-label" for="card-cvv">CVV</label>
+            <input type="text" id="card-cvv" class="form-input" placeholder="•••" maxlength="3" inputmode="numeric"></div>
+        </div>
+        <div class="payment-total-row"><span>Total to pay</span><strong id="modal-total">$0.00</strong></div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-pay-now" style="margin-top:8px">🔒 Pay Now</button>
+        <p class="payment-security-note">🔐 256-bit SSL encryption · PCI DSS compliant</p>
+      </form>
+      <button class="btn btn-ghost btn-full" id="btn-card-back" style="margin-top:4px">← Back</button>
+    </div>
+
+    <!-- Step 3b: Transfer -->
+    <div id="co-step-3-transfer" class="co-step" style="display:none">
+      <div class="modal-header">
+        <h2>🏦 Bank Transfer</h2>
+        <p>Transfer the exact amount to complete your order</p>
+      </div>
+      <div class="transfer-box">
+        <div class="transfer-row"><span>Bank</span><strong>First Mediterranean Bank</strong></div>
+        <div class="transfer-row"><span>Account Name</span><strong>Little Lemon Restaurant LLC</strong></div>
+        <div class="transfer-row"><span>Account No.</span><strong>1234 5678 9012</strong></div>
+        <div class="transfer-row"><span>Sort Code</span><strong>20-00-00</strong></div>
+        <div class="transfer-row"><span>Reference</span><strong id="transfer-ref">LL-ORDER</strong></div>
+        <div class="transfer-row transfer-row-total"><span>Amount</span><strong id="transfer-amount">$0.00</strong></div>
+      </div>
+      <p class="transfer-note">⚡ Your order is reserved for 2 hours. We'll confirm once payment clears (usually within 30 min during business hours).</p>
+      <button class="btn btn-primary btn-full btn-lg" id="btn-confirm-transfer" style="margin-top:16px">✅ I've Made the Transfer</button>
+      <button class="btn btn-ghost btn-full" id="btn-transfer-back" style="margin-top:8px">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Success Overlay ───────────────────────────── -->
+<div class="success-overlay" id="success-overlay" style="display:none" role="dialog" aria-modal="true">
+  <div class="success-card">
+    <div class="success-burst">🎉</div>
+    <div class="success-checkmark">
+      <svg viewBox="0 0 52 52" class="check-svg"><circle cx="26" cy="26" r="25" fill="none"/><path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+    </div>
+    <h2>Order Placed!</h2>
+    <p>Your food is being lovingly prepared. Estimated delivery: <strong>25–35 minutes</strong> 🛵</p>
+    <div class="success-order-num" id="success-order-num"></div>
+    <button class="btn btn-primary btn-lg" id="btn-view-orders" style="margin-top:28px;min-width:200px">📦 View My Orders</button>
+  </div>
+</div>
+
+<!-- ── Chatbot Widget ────────────────────────────── -->
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chatbot-header">
+    <div class="chatbot-av-wrap"><span class="chatbot-av">🍋</span><span class="chatbot-online"></span></div>
+    <div class="chatbot-hd-text"><div class="chatbot-hd-name">Lemon</div><div class="chatbot-hd-sub">Little Lemon Assistant · Online</div></div>
+    <button class="chatbot-close-btn" id="chatbot-close-btn" aria-label="Close chat">✕</button>
+  </div>
+  <div class="chatbot-msgs" id="chatbot-msgs"></div>
+  <div class="chatbot-qr" id="chatbot-qr"></div>
+  <form class="chatbot-input-row" id="chatbot-form" autocomplete="off">
+    <input type="text" id="chatbot-input" class="chatbot-input-field" placeholder="Type a message…">
+    <button type="submit" class="chatbot-send-btn" aria-label="Send">➤</button>
+  </form>
+</div>
+<button class="chatbot-toggle" id="chatbot-toggle" aria-label="Chat with us">
+  <span class="chatbot-toggle-icon" id="chatbot-toggle-icon">💬</span>
+  <span class="chatbot-unread" id="chatbot-unread" style="display:none">1</span>
+</button>
 
 <script src="{% static 'js/app.js' %}"></script>
 {% block extra_scripts %}{% endblock %}

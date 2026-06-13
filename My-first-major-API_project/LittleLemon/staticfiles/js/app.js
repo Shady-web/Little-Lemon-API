@@ -57,6 +57,18 @@ const Auth = {
     Cart.clearLocal();
     window.location.href = '/';
   },
+
+  async validateStoredToken() {
+    if (!this.isLoggedIn()) return;
+    try {
+      await API.get(`${API.auth}/users/me/`);
+    } catch (err) {
+      if (err?.status === 401) {
+        localStorage.removeItem('ll_token');
+        localStorage.removeItem('ll_username');
+      }
+    }
+  },
 };
 
 /* ── Toast Notifications ──────────────────────────── */
@@ -219,6 +231,119 @@ const Nav = {
   },
 };
 
+/* ── Cart Panel (mini dropdown) ──────────────────── */
+const CartPanel = {
+  _open: false,
+
+  init() {
+    const btn    = document.getElementById('nav-cart-btn');
+    const panel  = document.getElementById('cart-panel');
+    const overlay= document.getElementById('cart-panel-overlay');
+    const closeBtn=document.getElementById('cart-panel-close');
+    const coBtn  = document.getElementById('btn-cp-checkout');
+
+    if (!btn || !panel) return;
+
+    btn.addEventListener('click', e => { e.stopPropagation(); this.toggle(); });
+    closeBtn?.addEventListener('click', () => this.close());
+    overlay?.addEventListener('click', () => this.close());
+    coBtn?.addEventListener('click', () => {
+      this.close();
+      if (!Auth.isLoggedIn()) {
+        Toast.warning('Please sign in first.');
+        setTimeout(() => window.location.href = '/login/', 900);
+        return;
+      }
+      const totalEl = document.getElementById('cp-total');
+      Checkout.open(totalEl?.textContent || '$0.00');
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') this.close(); });
+  },
+
+  toggle() { this._open ? this.close() : this.open(); },
+
+  async open() {
+    this._open = true;
+    const panel   = document.getElementById('cart-panel');
+    const overlay = document.getElementById('cart-panel-overlay');
+    panel?.classList.add('open');
+    overlay?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    await this.render();
+  },
+
+  close() {
+    this._open = false;
+    document.getElementById('cart-panel')?.classList.remove('open');
+    document.getElementById('cart-panel-overlay')?.classList.remove('open');
+    document.body.style.overflow = '';
+  },
+
+  async render() {
+    const body   = document.getElementById('cart-panel-body');
+    const footer = document.getElementById('cart-panel-footer');
+    const coBtn  = document.getElementById('btn-cp-checkout');
+    if (!body) return;
+
+    if (!Auth.isLoggedIn()) {
+      body.innerHTML = `
+        <div class="cp-empty">
+          <div class="empty-icon">🔒</div>
+          <p>Sign in to view your cart</p>
+          <a href="/login/" class="btn btn-green btn-sm">Sign In</a>
+        </div>`;
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+
+    body.innerHTML = '<div style="padding:32px;text-align:center"><div class="spinner"></div></div>';
+    const items = await Cart.get();
+
+    if (!items.length) {
+      body.innerHTML = `
+        <div class="cp-empty">
+          <div class="empty-icon">🛒</div>
+          <p>Your cart is empty</p>
+          <a href="/menu/" class="btn btn-green btn-sm" onclick="CartPanel.close()">Browse Menu</a>
+        </div>`;
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+
+    let subtotal = 0;
+    body.innerHTML = items.map(item => {
+      subtotal += parseFloat(item.price || 0);
+      const mi    = item.menu_item_details || {};
+      const title = mi.title || `Item #${item.menu_items}`;
+      const imgUrl= FOOD_IMAGES[(title).toLowerCase()];
+      const emoji = itemEmoji({ title, id: item.menu_items });
+      const color = itemColor({ id: item.menu_items });
+      const thumb = imgUrl
+        ? `<img src="${imgUrl}" alt="${title}" class="cp-item-thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      return `
+        <div class="cp-item">
+          <div class="cp-item-img ${color}">${thumb}<span class="cp-item-emoji" style="${imgUrl?'display:none':''}">${emoji}</span></div>
+          <div class="cp-item-info">
+            <div class="cp-item-title">${title}</div>
+            <div class="cp-item-qty">Qty: ${item.quantity}</div>
+          </div>
+          <div class="cp-item-price">${formatPrice(item.price)}</div>
+        </div>`;
+    }).join('');
+
+    const delivery = 3.99;
+    const total    = subtotal + delivery;
+    const subtotalEl = document.getElementById('cp-subtotal');
+    const totalEl    = document.getElementById('cp-total');
+    if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+    if (totalEl)    totalEl.textContent    = formatPrice(total);
+    if (footer)     footer.style.display  = 'block';
+    if (coBtn)      coBtn.disabled        = false;
+  },
+};
+
 /* ── Menu Item Utilities ──────────────────────────── */
 const FOOD_EMOJIS = ['🍽️','🥗','🍝','🥙','🫒','🍋','🧆','🥘','🫕','🍤','🥩','🍣'];
 const COLORS = ['cat-bg-1','cat-bg-2','cat-bg-3','cat-bg-4','cat-bg-5','cat-bg-6'];
@@ -284,6 +409,315 @@ function stockLabel(inventory) {
   if (inventory <= 5)  return `<span class="stock-label low">Only ${inventory} left</span>`;
   return '';
 }
+
+/* ── Multi-Step Checkout ─────────────────────────── */
+const Checkout = {
+  _step: 1,
+  _total: '$0.00',
+
+  init() {
+    const backdrop = document.getElementById('checkout-modal');
+    const closeBtn = document.getElementById('modal-close-btn');
+    const delNext  = document.getElementById('btn-del-next');
+    const payBack  = document.getElementById('btn-pay-back');
+    const cardBack = document.getElementById('btn-card-back');
+    const tfBack   = document.getElementById('btn-transfer-back');
+    const optCard  = document.getElementById('opt-card');
+    const optXfer  = document.getElementById('opt-transfer');
+    const payForm  = document.getElementById('payment-form');
+    const cfmXfer  = document.getElementById('btn-confirm-transfer');
+    const viewOrds = document.getElementById('btn-view-orders');
+
+    if (!backdrop) return;
+
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) this.close(); });
+    closeBtn?.addEventListener('click', () => this.close());
+
+    delNext?.addEventListener('click', () => {
+      const name    = document.getElementById('del-name')?.value.trim();
+      const address = document.getElementById('del-address')?.value.trim();
+      const city    = document.getElementById('del-city')?.value.trim();
+      const zip     = document.getElementById('del-zip')?.value.trim();
+      const phone   = document.getElementById('del-phone')?.value.trim();
+      if (!name)    { Toast.error('Please enter your full name.');     return; }
+      if (!address) { Toast.error('Please enter a delivery address.'); return; }
+      if (!city)    { Toast.error('Please enter your city.');          return; }
+      if (!zip)     { Toast.error('Please enter your ZIP code.');      return; }
+      if (!phone)   { Toast.error('Please enter a phone number.');     return; }
+      this.goTo(2);
+    });
+
+    payBack?.addEventListener('click',  () => this.goTo(1));
+    cardBack?.addEventListener('click', () => this.goTo(2));
+    tfBack?.addEventListener('click',   () => this.goTo(2));
+
+    optCard?.addEventListener('click', () => this.goTo('3-card'));
+    optXfer?.addEventListener('click', () => {
+      const ref = `LL-${Date.now().toString(36).toUpperCase()}`;
+      const refEl = document.getElementById('transfer-ref');
+      const amtEl = document.getElementById('transfer-amount');
+      if (refEl) refEl.textContent = ref;
+      if (amtEl) amtEl.textContent = this._total;
+      this.goTo('3-transfer');
+    });
+
+    // Live card preview
+    const cardNumIn  = document.getElementById('card-number');
+    const cardNameIn = document.getElementById('card-name');
+    const cardExpIn  = document.getElementById('card-expiry');
+    const cardCvvIn  = document.getElementById('card-cvv');
+    const ccCard     = document.getElementById('cc-card');
+
+    cardNumIn?.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g,'').substring(0,16);
+      e.target.value = v.replace(/(.{4})/g,'$1 ').trim();
+      const d = v.padEnd(16,'•');
+      const el = document.getElementById('cc-num-display');
+      if (el) el.textContent = d.replace(/(.{4})/g,'$1 ').trim();
+    });
+    cardNameIn?.addEventListener('input', e => {
+      const el = document.getElementById('cc-name-display');
+      if (el) el.textContent = e.target.value.toUpperCase() || 'YOUR NAME';
+    });
+    cardExpIn?.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g,'').substring(0,4);
+      if (v.length >= 3) v = v.slice(0,2)+'/'+v.slice(2);
+      e.target.value = v;
+      const el = document.getElementById('cc-exp-display');
+      if (el) el.textContent = v || 'MM/YY';
+    });
+    cardCvvIn?.addEventListener('focus', () => ccCard?.classList.add('flipped'));
+    cardCvvIn?.addEventListener('blur',  () => ccCard?.classList.remove('flipped'));
+    cardCvvIn?.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g,'').substring(0,3);
+      e.target.value = v;
+      const el = document.getElementById('cc-cvv-display');
+      if (el) el.textContent = v.replace(/./g,'•') || '•••';
+    });
+
+    payForm?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const num  = (cardNumIn?.value||'').replace(/\s/g,'');
+      const name = cardNameIn?.value.trim()||'';
+      const exp  = cardExpIn?.value||'';
+      const cvv  = cardCvvIn?.value||'';
+      if (num.length < 16) { Toast.error('Please enter a valid 16-digit card number.'); return; }
+      if (!name)            { Toast.error('Please enter the cardholder name.'); return; }
+      if (exp.length < 5)   { Toast.error('Please enter a valid expiry date (MM/YY).'); return; }
+      if (cvv.length < 3)   { Toast.error('Please enter a valid 3-digit CVV.'); return; }
+      const payBtn = document.getElementById('btn-pay-now');
+      payBtn.disabled = true;
+      payBtn.innerHTML = '<span class="spinner"></span> Processing…';
+      try {
+        const order = await API.post(`${API.base}/orders`, {});
+        Cart.clearLocal();
+        this.close();
+        this._showSuccess(order?.id);
+      } catch (err) {
+        Toast.error(err.data?.message || 'Payment failed. Please try again.');
+        payBtn.disabled = false;
+        payBtn.innerHTML = '🔒 Pay Now';
+      }
+    });
+
+    cfmXfer?.addEventListener('click', async () => {
+      cfmXfer.disabled = true;
+      cfmXfer.innerHTML = '<span class="spinner"></span> Confirming…';
+      try {
+        const order = await API.post(`${API.base}/orders`, {});
+        Cart.clearLocal();
+        this.close();
+        this._showSuccess(order?.id);
+      } catch (err) {
+        Toast.error(err.data?.message || 'Could not place order. Please try again.');
+        cfmXfer.disabled = false;
+        cfmXfer.innerHTML = '✅ I\'ve Made the Transfer';
+      }
+    });
+
+    viewOrds?.addEventListener('click', () => { window.location.href = '/orders/'; });
+  },
+
+  open(totalText) {
+    this._total = totalText || '$0.00';
+    const el = document.getElementById('modal-total');
+    if (el) el.textContent = this._total;
+    this.goTo(1);
+    const backdrop = document.getElementById('checkout-modal');
+    if (!backdrop) return;
+    backdrop.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => backdrop.classList.add('open'), 10);
+  },
+
+  close() {
+    const backdrop = document.getElementById('checkout-modal');
+    if (!backdrop) return;
+    backdrop.classList.remove('open');
+    setTimeout(() => { backdrop.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+  },
+
+  goTo(step) {
+    this._step = step;
+    const ids = ['co-step-1','co-step-2','co-step-3-card','co-step-3-transfer'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const target = `co-step-${step}`;
+    const el = document.getElementById(target);
+    if (el) el.style.display = 'block';
+
+    // Update step bar
+    [1,2,3].forEach(n => {
+      const s = document.getElementById(`csstep-${n}`);
+      if (!s) return;
+      const active = (step === n || (step === '3-card' && n === 3) || (step === '3-transfer' && n === 3));
+      const done   = (typeof step === 'number' && n < step) || ((step === '3-card' || step === '3-transfer') && n < 3);
+      s.classList.toggle('active', active);
+      s.classList.toggle('done', done);
+    });
+  },
+
+  _showSuccess(orderId) {
+    const ov = document.getElementById('success-overlay');
+    const num = document.getElementById('success-order-num');
+    if (num) num.textContent = orderId ? `Order #${orderId}` : '';
+    if (ov) {
+      ov.style.display = 'flex';
+      setTimeout(() => ov.classList.add('open'), 10);
+    }
+  },
+};
+
+/* ── Chatbot ──────────────────────────────────────── */
+const Chatbot = {
+  _open: false,
+  _greeted: false,
+
+  _kb: [
+    { p: ['hello','hi','hey','howdy','morning','afternoon','evening','hola'], r: "Hello there! 👋 Great to have you here. I'm Lemon, the Little Lemon assistant. What can I help you with today?" },
+    { p: ['hour','open','close','time','when are you','schedule'], r: "We're open every day from **11 AM to 10 PM** 🕐. Come on in — we'd love to see you!" },
+    { p: ['location','address','where','find you','directions','map'], r: "You'll find us at **123 Mediterranean Ave, Chicago, IL 60601** 📍. We're in the heart of the city!" },
+    { p: ['menu','food','dish','eat','serve','offer','what do you have','what can i'], r: "Our menu has something for everyone! 🍽️\n• **Starters** — Greek Salad, Hummus & Pita, Falafel\n• **Mains** — Grilled Lamb Chops, Pasta Arrabiata, Lemon Herb Chicken\n• **Seafood** — Grilled Sea Bass, Salmon Fillet, Calamari\n• **Desserts** — Baklava, Lemon Tart, Chocolate Lava Cake\n• **Drinks** — Fresh Lemonade, Mint Lemonade, Turkish Coffee\nCheck the full [Menu](/menu/) online!" },
+    { p: ['deliver','delivery','order online','online order','shipping'], r: "Yes, we deliver across Chicago! 🛵 Order online, and your food arrives in **25–35 minutes**. Delivery fee is just **$3.99**." },
+    { p: ['pay','payment','card','transfer','cash','how to pay'], r: "We accept **card payments** (Visa, Mastercard, Amex) and **bank transfers** for online orders. When you check out, you'll be able to choose! 💳" },
+    { p: ['allerg','vegan','vegetarian','gluten','diet','dairy','nut'], r: "We have **vegetarian** and **vegan** options! 🌱 Please mention any allergies when you order — our kitchen can accommodate most dietary requirements." },
+    { p: ['reserv','book','table','booking'], r: "For reservations, call us at **+1 (312) 555-0182** or email **hello@littlelemon.com**. We recommend booking ahead for weekends! 📞" },
+    { p: ['contact','phone','email','call','reach'], r: "Reach us anytime:\n📞 **+1 (312) 555-0182**\n✉️ **hello@littlelemon.com**\nOr visit us at 123 Mediterranean Ave, Chicago." },
+    { p: ['price','cost','expensive','cheap','how much','afford'], r: "Our prices are great value for authentic Mediterranean! 💰\n• Starters: $9.99–$12.99\n• Mains: $14.99–$26.99\n• Seafood: $14.99–$24.99\n• Desserts: $5.99–$8.99\n• Drinks: $2.99–$5.49" },
+    { p: ['special','daily special','today','recommend','best','popular','favourite'], r: "Our Daily Specials rotate every 24 hours — check the **Home page** for today's picks! ⭐ Most popular: Grilled Lamb Chops, Grilled Sea Bass, and Greek Salad." },
+    { p: ['thank','thanks','perfect','great','awesome','brilliant','cheers'], r: "You're so welcome! 🍋 Enjoy your meal, and don't hesitate to ask if you need anything else." },
+    { p: ['bye','goodbye','see you','later','ciao'], r: "Goodbye! 👋 Hope to see you at Little Lemon soon. Have a wonderful day! 🌟" },
+    { p: ['account','sign up','register','login','sign in'], r: "You can **create an account** or **sign in** using the button in the top-right corner. Having an account lets you place orders and track delivery!" },
+    { p: ['cart','basket','order','checkout','buy'], r: "Ready to order? Browse our [Menu](/menu/), add items to your cart, and click the 🛒 cart icon to check out. We'll take care of the rest! 😊" },
+  ],
+
+  _quickReplies: ['📍 Location & Hours', '🍽️ Our Menu', '🚗 Delivery Info', '💳 Payment Options', '📞 Contact Us'],
+
+  reply(msg) {
+    const lower = msg.toLowerCase();
+    for (const entry of this._kb) {
+      if (entry.p.some(w => lower.includes(w))) return entry.r;
+    }
+    return "Hmm, I'm not sure about that! 😊 Try asking about our **menu**, **hours**, **delivery**, **reservations**, or **contact info** — or call us at **+1 (312) 555-0182**.";
+  },
+
+  _addMsg(text, role) {
+    const msgs = document.getElementById('chatbot-msgs');
+    if (!msgs) return;
+    const div = document.createElement('div');
+    div.className = `chat-msg chat-msg--${role}`;
+    // Convert **bold** markdown to <strong>
+    const html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g,'<br>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>');
+    div.innerHTML = `${role==='bot'?'<span class="chat-av">🍋</span>':''}<div class="chat-bubble">${html}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  },
+
+  _showQuickReplies() {
+    const el = document.getElementById('chatbot-qr');
+    if (!el) return;
+    el.innerHTML = this._quickReplies.map(r =>
+      `<button class="chat-qr-btn" data-q="${r}">${r}</button>`).join('');
+    el.querySelectorAll('.chat-qr-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._addMsg(btn.dataset.q, 'user');
+        el.innerHTML = '';
+        setTimeout(() => this._botReply(btn.dataset.q), 600);
+      });
+    });
+  },
+
+  _botReply(msg) {
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg chat-msg--bot chat-typing';
+    typing.innerHTML = '<span class="chat-av">🍋</span><div class="chat-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+    const msgs = document.getElementById('chatbot-msgs');
+    msgs?.appendChild(typing);
+    msgs && (msgs.scrollTop = msgs.scrollHeight);
+    setTimeout(() => {
+      typing.remove();
+      this._addMsg(this.reply(msg), 'bot');
+    }, 900 + Math.random() * 400);
+  },
+
+  init() {
+    const toggle  = document.getElementById('chatbot-toggle');
+    const closeBtn= document.getElementById('chatbot-close-btn');
+    const form    = document.getElementById('chatbot-form');
+    const input   = document.getElementById('chatbot-input');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', () => this.toggle());
+    closeBtn?.addEventListener('click', () => this.close());
+    form?.addEventListener('submit', e => {
+      e.preventDefault();
+      const msg = input?.value.trim();
+      if (!msg) return;
+      input.value = '';
+      document.getElementById('chatbot-qr').innerHTML = '';
+      this._addMsg(msg, 'user');
+      this._botReply(msg);
+    });
+
+    setTimeout(() => {
+      if (!this._open) {
+        const badge = document.getElementById('chatbot-unread');
+        if (badge) badge.style.display = 'flex';
+      }
+    }, 3000);
+  },
+
+  open() {
+    this._open = true;
+    const win  = document.getElementById('chatbot-window');
+    const icon = document.getElementById('chatbot-toggle-icon');
+    const badge= document.getElementById('chatbot-unread');
+    win?.classList.add('open');
+    if (icon) icon.textContent = '✕';
+    if (badge) badge.style.display = 'none';
+    if (!this._greeted) {
+      this._greeted = true;
+      setTimeout(() => {
+        this._addMsg("Hello! 👋 Welcome to **Little Lemon** — Chicago's favourite Mediterranean restaurant! 🍋", 'bot');
+        setTimeout(() => {
+          this._addMsg("I'm **Lemon**, your virtual assistant. I can help with our menu, hours, delivery, reservations, and more. What can I do for you today?", 'bot');
+          setTimeout(() => this._showQuickReplies(), 600);
+        }, 800);
+      }, 400);
+    }
+  },
+
+  close() {
+    this._open = false;
+    document.getElementById('chatbot-window')?.classList.remove('open');
+    const icon = document.getElementById('chatbot-toggle-icon');
+    if (icon) icon.textContent = '💬';
+  },
+
+  toggle() { this._open ? this.close() : this.open(); },
+};
 
 /* ── Menu Card Template ───────────────────────────── */
 function renderMenuCard(item, inCart = false) {
@@ -602,102 +1036,9 @@ async function initCart() {
     document.getElementById('delivery-fee').textContent = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Free';
   }
 
-  /* ── Checkout Modal ─────────────────────────────── */
-  const modal        = document.getElementById('checkout-modal');
-  const modalClose   = document.getElementById('modal-close-btn');
-  const payForm      = document.getElementById('payment-form');
-  const payBtn       = document.getElementById('btn-pay-now');
-  const modalTotal   = document.getElementById('modal-total');
-  const cardNumIn    = document.getElementById('card-number');
-  const cardNameIn   = document.getElementById('card-name');
-  const cardExpIn    = document.getElementById('card-expiry');
-  const cardCvvIn    = document.getElementById('card-cvv');
-  const ccCard       = document.getElementById('cc-card');
-  const ccNumDisp    = document.getElementById('cc-num-display');
-  const ccNameDisp   = document.getElementById('cc-name-display');
-  const ccExpDisp    = document.getElementById('cc-exp-display');
-  const ccCvvDisp    = document.getElementById('cc-cvv-display');
-  const successOv    = document.getElementById('success-overlay');
-  const successNum   = document.getElementById('success-order-num');
-
-  function openModal() {
-    if (!modal) return;
-    modalTotal && (modalTotal.textContent = totalEl?.textContent || '$0.00');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => modal.classList.add('open'), 10);
-  }
-
-  function closeModal() {
-    if (!modal) return;
-    modal.classList.remove('open');
-    setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = ''; }, 300);
-  }
-
-  orderBtn?.addEventListener('click', openModal);
-  modalClose?.addEventListener('click', closeModal);
-  modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-
-  // Live card preview
-  cardNumIn?.addEventListener('input', e => {
-    let v = e.target.value.replace(/\D/g, '').substring(0, 16);
-    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
-    const disp = v.padEnd(16, '•');
-    ccNumDisp && (ccNumDisp.textContent = disp.replace(/(.{4})/g, '$1 ').trim());
-  });
-  cardNameIn?.addEventListener('input', e => {
-    ccNameDisp && (ccNameDisp.textContent = e.target.value.toUpperCase() || 'YOUR NAME');
-  });
-  cardExpIn?.addEventListener('input', e => {
-    let v = e.target.value.replace(/\D/g, '').substring(0, 4);
-    if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
-    e.target.value = v;
-    ccExpDisp && (ccExpDisp.textContent = v || 'MM/YY');
-  });
-  cardCvvIn?.addEventListener('focus', () => ccCard?.classList.add('flipped'));
-  cardCvvIn?.addEventListener('blur',  () => ccCard?.classList.remove('flipped'));
-  cardCvvIn?.addEventListener('input', e => {
-    const v = e.target.value.replace(/\D/g, '').substring(0, 3);
-    e.target.value = v;
-    ccCvvDisp && (ccCvvDisp.textContent = v.replace(/./g, '•') || '•••');
-  });
-
-  payForm?.addEventListener('submit', async e => {
-    e.preventDefault();
-    // Basic client-side validation
-    const num  = (cardNumIn?.value || '').replace(/\s/g, '');
-    const name = cardNameIn?.value.trim() || '';
-    const exp  = cardExpIn?.value || '';
-    const cvv  = cardCvvIn?.value || '';
-    if (num.length < 16) { Toast.error('Please enter a valid 16-digit card number.'); return; }
-    if (!name)            { Toast.error('Please enter the cardholder name.'); return; }
-    if (exp.length < 5)   { Toast.error('Please enter a valid expiry date (MM/YY).'); return; }
-    if (cvv.length < 3)   { Toast.error('Please enter a valid 3-digit CVV.'); return; }
-
-    payBtn.disabled = true;
-    payBtn.innerHTML = '<span class="spinner"></span> Processing…';
-
-    try {
-      const order = await API.post(`${API.base}/orders`, {});
-      Cart.clearLocal();
-      closeModal();
-      if (successOv) {
-        successNum && (successNum.textContent = order?.id ? `Order #${order.id}` : '');
-        successOv.style.display = 'flex';
-        setTimeout(() => successOv.classList.add('open'), 10);
-      } else {
-        Toast.success('Order placed successfully! 🎉');
-        setTimeout(() => window.location.href = '/orders/', 1200);
-      }
-    } catch (err) {
-      Toast.error(err.data?.message || 'Payment failed. Please try again.');
-      payBtn.disabled = false;
-      payBtn.innerHTML = '🔒 Pay Now';
-    }
-  });
-
-  document.getElementById('btn-view-orders')?.addEventListener('click', () => {
-    window.location.href = '/orders/';
+  orderBtn?.addEventListener('click', () => {
+    const t = totalEl?.textContent;
+    Checkout.open(t);
   });
 
   clearBtn?.addEventListener('click', async () => {
@@ -786,6 +1127,24 @@ async function initOrders() {
   }
 }
 
+/* ── Google Sign-In callback (global — called by GIS library) ─── */
+async function handleGoogleSignIn(response) {
+  const btn = document.getElementById('btn-google-signin') || document.getElementById('btn-google-signup');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…'; }
+  try {
+    const data = await API.post(`${API.base}/auth/google/`, { credential: response.credential });
+    localStorage.setItem('ll_token', data.auth_token);
+    localStorage.setItem('ll_username', data.username);
+    Toast.success(`Welcome, ${data.username}!`);
+    const next = new URLSearchParams(window.location.search).get('next') || '/';
+    setTimeout(() => window.location.href = next, 800);
+  } catch (err) {
+    const msg = err?.data?.error || 'Google sign-in failed. Please try again.';
+    Toast.error(msg);
+    if (btn) { btn.disabled = false; btn.innerHTML = `<svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google`; }
+  }
+}
+
 /* ================================================================
    PAGE: AUTH (Login / Register)
    ================================================================ */
@@ -810,6 +1169,12 @@ function initAuth() {
   }
 
   tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+  // Wire Google buttons to trigger GIS OAuth flow
+  ['btn-google-signin', 'btn-google-signup'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', () => google.accounts.id.prompt());
+  });
 
   // Check if URL has ?tab=register
   if (new URLSearchParams(window.location.search).get('tab') === 'register') {
@@ -868,12 +1233,16 @@ function initAuth() {
    BOOTSTRAP
    ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  Auth.validateStoredToken();
   Nav.init();
+  CartPanel.init();
+  Checkout.init();
+  Chatbot.init();
 
   const page = document.body.dataset.page;
-  if (page === 'home')     initHome();
-  if (page === 'menu')     initMenu();
-  if (page === 'cart')     initCart();
-  if (page === 'orders')   initOrders();
-  if (page === 'auth')     initAuth();
+  if (page === 'home')   initHome();
+  if (page === 'menu')   initMenu();
+  if (page === 'cart')   initCart();
+  if (page === 'orders') initOrders();
+  if (page === 'auth')   initAuth();
 });

@@ -8,20 +8,33 @@ sys.path.insert(0, django_project)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LittleLemon.settings')
 os.environ.setdefault('VERCEL', '1')
 
-db_dest = '/tmp/db.sqlite3'
-is_fresh_db = not os.path.exists(db_dest)
+_bootstrapped = False
 
-if is_fresh_db:
+def _bootstrap():
+    global _bootstrapped
+    if _bootstrapped:
+        return
+    _bootstrapped = True
+
     import django
     django.setup()
     from django.core.management import call_command
-    call_command('migrate', verbosity=0)
-    try:
-        from LittleLemonAPI.models import MenuItems
-        if not MenuItems.objects.exists():
-            call_command('loaddata', 'initial_data', verbosity=0)
-    except Exception as e:
-        print(f"[init] fixture load failed: {e}")
+
+    use_postgres = bool(os.environ.get('DATABASE_URL'))
+    sqlite_path  = '/tmp/db.sqlite3'
+    fresh_sqlite = not use_postgres and not os.path.exists(sqlite_path)
+
+    # Migrate for PostgreSQL (idempotent) or on a fresh SQLite instance
+    if use_postgres or fresh_sqlite:
+        call_command('migrate', verbosity=0)
+        try:
+            from LittleLemonAPI.models import MenuItems
+            if not MenuItems.objects.exists():
+                call_command('loaddata', 'initial_data', verbosity=0)
+        except Exception as e:
+            print(f"[init] seed failed: {e}")
+
+_bootstrap()
 
 from django.core.wsgi import get_wsgi_application
 app = get_wsgi_application()

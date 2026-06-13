@@ -78,10 +78,12 @@ WSGI_APPLICATION = "LittleLemon.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-if os.environ.get('VERCEL'):
-    # On Vercel the deployment filesystem is read-only; copy DB to /tmp so writes work.
+# Priority: DATABASE_URL env var (Neon/PostgreSQL) → SQLite fallback
+_DATABASE_URL = os.environ.get('DATABASE_URL', '')
+if _DATABASE_URL:
+    import dj_database_url
+    DATABASES = {'default': dj_database_url.config(default=_DATABASE_URL, conn_max_age=600, ssl_require=True)}
+elif os.environ.get('VERCEL'):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -95,6 +97,9 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
+# Google OAuth client ID (set in Vercel env vars)
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 
 
 # Password validation
