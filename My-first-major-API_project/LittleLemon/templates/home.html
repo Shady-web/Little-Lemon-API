@@ -13,24 +13,24 @@
   <div class="hero-inner">
     <!-- Text side -->
     <div class="hero-text">
-      <span class="hero-badge">🍋 Chicago's Favourite Mediterranean</span>
-      <h1>Little Lemon</h1>
-      <p class="hero-subtitle">A Family Restaurant</p>
-      <p class="hero-desc">
+      <span class="hero-badge reveal">🍋 Chicago's Favourite Mediterranean</span>
+      <h1 class="reveal reveal-d1">Little Lemon</h1>
+      <p class="hero-subtitle reveal reveal-d2">A Family Restaurant</p>
+      <p class="hero-desc reveal reveal-d3">
         We are a family-owned Mediterranean restaurant, focused on traditional recipes
         served with a modern twist. Every plate tells a story of sun-soaked coasts
         and generations of culinary passion.
       </p>
-      <div class="hero-actions">
+      <div class="hero-actions reveal reveal-d4">
         <a href="/menu/" class="btn btn-primary btn-lg">🍽️ Order Online</a>
         <a href="#specials" class="btn btn-outline btn-lg">View Specials</a>
       </div>
     </div>
 
     <!-- Visual side -->
-    <div class="hero-image-box">
+    <div class="hero-image-box reveal-right">
       <div class="hero-visual">
-        <img src="https://unsplash.com/photos/fi9kJ8-8BEk/download?w=900"
+        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=900&auto=format&fit=crop"
              alt="A spread of fresh Mediterranean dishes on a table"
              class="hero-photo" onerror="this.remove()">
         <span class="hero-visual-emoji">🥘</span>
@@ -43,59 +43,114 @@
   <div class="hero-stats">
     <div class="hero-stats-inner">
       <div class="stat-item">
-        <span class="stat-number">25+</span>
+        <span class="stat-number" data-count="25" data-suffix="+">25+</span>
         <span class="stat-label">Menu Items</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">4.9★</span>
+        <span class="stat-number" data-count="4.9" data-suffix="★" data-decimals="1">4.9★</span>
         <span class="stat-label">Average Rating</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">7k+</span>
+        <span class="stat-number" data-count="7" data-suffix="k+">7k+</span>
         <span class="stat-label">Happy Customers</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">6 yrs</span>
+        <span class="stat-number" data-count="6" data-suffix=" yrs">6 yrs</span>
         <span class="stat-label">In Business</span>
       </div>
     </div>
   </div>
 </section>
 
+<!-- Wave: green → white -->
+<div class="wave-sep" style="background:#495E57">
+  <svg viewBox="0 0 1440 72" preserveAspectRatio="none" style="height:72px">
+    <path d="M0,36 C180,72 480,0 720,36 C960,72 1260,12 1440,36 L1440,72 L0,72 Z" fill="white"/>
+  </svg>
+</div>
+
 <!-- ====================================================
      SPECIALS
      ==================================================== -->
-<section class="section-pad" id="specials" aria-label="This week's specials">
+<section class="section-pad" id="specials" aria-label="This week's specials" style="padding-top:40px">
   <div class="container">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:48px;flex-wrap:wrap">
-      <div class="section-header" style="margin-bottom:0">
+      <div class="section-header reveal" style="margin-bottom:0">
         <span class="eyebrow">Today's Pick</span>
         <h2>Daily Specials</h2>
         <p>Three dishes curated fresh every day — <span id="specials-date" style="color:var(--green);font-weight:600"></span></p>
       </div>
-      <a href="/menu/" class="btn btn-ghost">See Full Menu →</a>
+      <a href="/menu/" class="btn btn-ghost reveal reveal-d2">See Full Menu →</a>
     </div>
 
     <!-- Dynamically loaded via app.js -->
-    <div class="menu-grid" id="specials-grid">
-      <!-- Skeleton cards shown while loading -->
+    <div class="menu-grid" id="specials-grid"></div>
+  </div>
+</section>
+
+<!-- Wave: white → green (promise strip) -->
+<div class="wave-sep" style="background:white">
+  <svg viewBox="0 0 1440 72" preserveAspectRatio="none" style="height:72px">
+    <path d="M0,36 C240,0 600,72 900,36 C1100,12 1300,60 1440,40 L1440,0 L0,0 Z" fill="#354740"/>
+  </svg>
+</div>
+
+<!-- ====================================================
+     PROMISE STRIP
+     ==================================================== -->
+<section class="promise-strip" aria-label="Our promise">
+  <div class="promise-grid">
+    <div class="promise-item reveal reveal-d1">
+      <div class="promise-icon">🌿</div>
+      <div>
+        <div class="promise-title">Fresh Daily</div>
+        <div class="promise-desc">Every ingredient sourced fresh each morning from local markets</div>
+      </div>
+    </div>
+    <div class="promise-item reveal reveal-d2">
+      <div class="promise-icon">🚚</div>
+      <div>
+        <div class="promise-title">Fast Delivery</div>
+        <div class="promise-desc">Hot food at your door within 25–35 minutes, every time</div>
+      </div>
+    </div>
+    <div class="promise-item reveal reveal-d3">
+      <div class="promise-icon">👨‍🍳</div>
+      <div>
+        <div class="promise-title">Expert Chefs</div>
+        <div class="promise-desc">Trained in traditional Mediterranean kitchens across Europe</div>
+      </div>
+    </div>
+    <div class="promise-item reveal reveal-d4">
+      <div class="promise-icon">🫶</div>
+      <div>
+        <div class="promise-title">Made with Love</div>
+        <div class="promise-desc">Family recipes passed through generations since 1962</div>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- Wave: green → off-white (testimonials) -->
+<div class="wave-sep" style="background:#354740">
+  <svg viewBox="0 0 1440 72" preserveAspectRatio="none" style="height:72px">
+    <path d="M0,24 C360,72 1080,0 1440,48 L1440,72 L0,72 Z" fill="#EDEFEE"/>
+  </svg>
+</div>
+
 <!-- ====================================================
      TESTIMONIALS
      ==================================================== -->
-<section class="section-pad testimonials" aria-label="Customer testimonials">
+<section class="section-pad testimonials" aria-label="Customer testimonials" style="padding-top:40px">
   <div class="container">
-    <div class="section-header" style="text-align:center;align-items:center">
+    <div class="section-header reveal" style="text-align:center;align-items:center">
       <span class="eyebrow">What People Say</span>
       <h2>Loved by Foodies</h2>
       <p>Don't just take our word for it — here's what our guests are saying.</p>
     </div>
 
     <div class="testimonials-grid">
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal reveal-d1">
         <div class="testimonial-stars">★★★★★</div>
         <p class="testimonial-text">
           "The grilled sea bass was absolutely divine. Every bite transported me straight to the
@@ -110,7 +165,7 @@
         </div>
       </div>
 
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal reveal-d2">
         <div class="testimonial-stars">★★★★★</div>
         <p class="testimonial-text">
           "Little Lemon is our go-to for family dinners. The hummus and the lamb chops are
@@ -125,7 +180,7 @@
         </div>
       </div>
 
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal reveal-d3">
         <div class="testimonial-stars">★★★★★</div>
         <p class="testimonial-text">
           "I've been to restaurants all over the world, and the bruschetta here rivals anything
@@ -140,7 +195,7 @@
         </div>
       </div>
 
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal reveal-d4">
         <div class="testimonial-stars">★★★★☆</div>
         <p class="testimonial-text">
           "Great food, lovely ambiance, and the online ordering is so easy to use.
@@ -158,20 +213,27 @@
   </div>
 </section>
 
+<!-- Wave: off-white → white (about) -->
+<div class="wave-sep" style="background:#EDEFEE">
+  <svg viewBox="0 0 1440 72" preserveAspectRatio="none" style="height:72px">
+    <path d="M0,48 C300,0 900,72 1440,24 L1440,72 L0,72 Z" fill="white"/>
+  </svg>
+</div>
+
 <!-- ====================================================
      ABOUT
      ==================================================== -->
-<section class="section-pad about" id="about" aria-label="About Little Lemon">
+<section class="section-pad about" id="about" aria-label="About Little Lemon" style="padding-top:40px">
   <div class="container">
     <div class="about-inner">
       <!-- Visual -->
-      <div class="about-visual">
+      <div class="about-visual reveal-left">
         <div class="about-img-main">🫒</div>
         <div class="about-img-accent">🍋</div>
       </div>
 
       <!-- Text -->
-      <div class="about-text">
+      <div class="about-text reveal-right">
         <div class="section-header">
           <span class="eyebrow">Our Story</span>
           <h2>A Family Tradition</h2>
@@ -231,14 +293,14 @@
      ==================================================== -->
 <section class="cta-banner section-pad" aria-label="Call to action">
   <div class="cta-inner">
-    <div class="cta-text">
+    <div class="cta-text reveal-left">
       <h2>Ready to Order?</h2>
       <p>
         Browse our full menu, add your favourites to the cart, and enjoy an authentic
         Mediterranean meal. Delivery available across Chicago.
       </p>
     </div>
-    <div class="cta-actions">
+    <div class="cta-actions reveal-right reveal-d2">
       <a href="/menu/" class="btn btn-primary btn-lg">🍽️ View Full Menu</a>
       <a href="/login/?tab=register" class="btn btn-outline btn-lg">Create Account</a>
     </div>

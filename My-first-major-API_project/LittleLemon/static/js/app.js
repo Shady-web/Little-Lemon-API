@@ -1229,6 +1229,60 @@ function initAuth() {
   });
 }
 
+/* ── Scroll Reveal ─────────────────────────────── */
+function initScrollReveal() {
+  const els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+  if (!els.length || !window.IntersectionObserver) {
+    els.forEach(el => el.classList.add('visible'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(el => io.observe(el));
+}
+
+/* ── Animated Counters ─────────────────────────── */
+function initCounters() {
+  const els = document.querySelectorAll('.stat-number[data-count]');
+  if (!els.length || !window.IntersectionObserver) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target  = parseFloat(el.dataset.count);
+      const suffix  = el.dataset.suffix  || '';
+      const decs    = el.dataset.decimals ? parseInt(el.dataset.decimals) : 0;
+      const dur     = 1600;
+      const started = performance.now();
+      function tick(now) {
+        const t    = Math.min((now - started) / dur, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const val  = target * ease;
+        el.textContent = (decs ? val.toFixed(decs) : Math.floor(val)) + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      io.unobserve(el);
+    });
+  }, { threshold: 0.6 });
+  els.forEach(el => io.observe(el));
+}
+
+/* ── Navbar scroll shadow ──────────────────────── */
+function initNavbarScroll() {
+  const nav = document.querySelector('.navbar');
+  if (!nav) return;
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+}
+
 /* ================================================================
    BOOTSTRAP
    ================================================================ */
@@ -1238,6 +1292,9 @@ document.addEventListener('DOMContentLoaded', () => {
   CartPanel.init();
   Checkout.init();
   Chatbot.init();
+  initScrollReveal();
+  initCounters();
+  initNavbarScroll();
 
   const page = document.body.dataset.page;
   if (page === 'home')   initHome();
