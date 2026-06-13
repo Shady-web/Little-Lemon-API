@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import google_auth
 
 urlpatterns = [
     path('categories', views.CategoriesView.as_view()),
@@ -16,6 +17,7 @@ urlpatterns = [
     #path('orders/<int:pk>/',views.DeliveryCrewOrdersView.as_view()),
     path('orders', views.OrdersView.as_view()),
     path('orders/<int:pk>/', views.SingleOrdersView.as_view()),
+    path('auth/google/', google_auth),
     #path('orders', views.ManagerOrdersView.as_view()),
     #path('orders/<int:pk>/', views.ManagerOrdersView.as_view()),
 ]

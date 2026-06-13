@@ -1,20 +1,71 @@
+import json
+from urllib.request import urlopen
+from urllib.error import URLError
+
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from django.conf import settings as django_settings
+from rest_framework import generics, viewsets, status
 from rest_framework.response import Response
-from .models import MenuItems, Category, Cart, OrderItems, Order
-from .serializers import MenuItemsSerializer, CategorySerializer, CartSerializer, UserSerializer, OrderSerializer
-from .serializers import OrderSerializer 
-from rest_framework.decorators import  throttle_classes
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import User
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from .permissions import IsAdminOrManagerPermission
-from rest_framework import viewsets
-from django.utils import timezone
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+from django.contrib.auth.models import Group, User
+from django.utils import timezone
+
+from .models import MenuItems, Category, Cart, OrderItems, Order
+from .serializers import (MenuItemsSerializer, CategorySerializer, CartSerializer,
+                          UserSerializer, OrderSerializer)
+from .permissions import IsAdminOrManagerPermission
 from .throttles import OneCallPerMinute
-# Create your views here.
+
+
+# ── Google OAuth ─────────────────────────────────────────────────────────────
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    """Accept a Google ID token, verify it, and return a DRF auth token."""
+    credential = request.data.get('credential', '').strip()
+    if not credential:
+        return Response({'error': 'No credential provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify with Google's tokeninfo endpoint (stdlib only, no extra deps)
+    try:
+        url = f'https://oauth2.googleapis.com/tokeninfo?id_token={credential}'
+        with urlopen(url, timeout=10) as resp:
+            info = json.loads(resp.read().decode())
+    except Exception:
+        return Response({'error': 'Could not verify Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if 'error' in info or 'error_description' in info:
+        return Response({'error': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Optionally verify the token was issued for our app
+    client_id = getattr(django_settings, 'GOOGLE_CLIENT_ID', '')
+    if client_id and info.get('aud') != client_id:
+        return Response({'error': 'Token audience mismatch.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    email = info.get('email', '').lower()
+    if not email:
+        return Response({'error': 'No email in Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get or create by email — works even after a DB reset
+    user = User.objects.filter(email=email).first()
+    if not user:
+        base = email.split('@')[0].replace('.', '_').replace('-', '_')[:20]
+        username, n = base, 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base}{n}'; n += 1
+        user = User.objects.create_user(
+            username=username, email=email,
+            first_name=info.get('given_name', ''),
+            last_name=info.get('family_name', ''),
+        )
+        user.set_unusable_password()
+        user.save()
+
+    from rest_framework.authtoken.models import Token
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({'auth_token': token.key, 'username': user.username})
 
 class CategoriesView(generics.ListCreateAPIView, generics.DestroyAPIView):
     queryset = Category.objects.all()
