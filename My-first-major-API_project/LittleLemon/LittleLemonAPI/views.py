@@ -171,7 +171,7 @@ class DeliveryCrewViewSet(viewsets.ViewSet):
          delivery_crew.user_set.remove(user)
          return Response({"message":"user removed from delivery crew group"}, 200)
 
-class OrdersView(generics.RetrieveUpdateDestroyAPIView, generics.ListCreateAPIView):
+class OrdersView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
