@@ -1075,25 +1075,29 @@ async function initOrders() {
 
   try {
     const data   = await API.get(`${API.base}/orders`);
-    const orders = data.results || data;
+    const orders = Array.isArray(data) ? data : (data.results || []);
 
     if (!orders.length) {
       container.innerHTML = `
         <div class="order-empty">
-          <div class="empty-icon">📦</div>
-          <h3>No orders yet</h3>
-          <p>Your order history will appear here once you place your first order.</p>
-          <a href="/menu/" class="btn btn-green" style="margin-top:16px">Start Ordering</a>
+          <div class="empty-icon" style="font-size:3.5rem;margin-bottom:20px">🍽️</div>
+          <h3 style="margin-bottom:10px">No orders yet</h3>
+          <p style="max-width:340px;margin:0 auto 24px">
+            Your order history will appear here after you place your first order.
+            Browse the menu and treat yourself to something delicious!
+          </p>
+          <a href="/menu/" class="btn btn-green btn-lg">Browse Menu →</a>
         </div>`;
       return;
     }
 
     container.innerHTML = orders.map(order => {
       const statusClass = order.status ? 'status-delivered' : 'status-pending';
-      const statusText  = order.status ? '✅ Delivered' : '⏳ Pending';
+      const statusText  = order.status ? '✅ Delivered' : '⏳ In Progress';
       const date = new Date(order.date).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
       });
+      const itemCount = (order.order_items || []).length;
       return `
         <div class="order-card">
           <div class="order-header">
@@ -1103,27 +1107,34 @@ async function initOrders() {
             <span class="order-status ${statusClass}">${statusText}</span>
           </div>
           <div class="order-details">
-            <div class="order-detail-item">
-              <strong>Customer:</strong> ${order.user}
-            </div>
             ${order.delivery_crew
-              ? `<div class="order-detail-item"><strong>Driver:</strong> ${order.delivery_crew}</div>`
+              ? `<div class="order-detail-item">🛵 <strong>Driver:</strong> ${order.delivery_crew}</div>`
               : ''}
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-            <span class="tag tag-green">${(order.order_items||[]).length} item${(order.order_items||[]).length !== 1 ? 's' : ''}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:8px">
+            <span class="tag tag-green">🍴 ${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
             <span class="order-total">${formatPrice(order.total)}</span>
           </div>
         </div>`;
     }).join('');
-  } catch {
-    container.innerHTML = `
-      <div class="order-empty">
-        <div class="empty-icon">⚠️</div>
-        <h3>Could not load orders</h3>
-        <p>Please try refreshing the page.</p>
-        <button class="btn btn-green" style="margin-top:16px" onclick="location.reload()">Refresh</button>
-      </div>`;
+  } catch (err) {
+    if (err?.status === 401) {
+      container.innerHTML = `
+        <div class="order-empty">
+          <div class="empty-icon" style="font-size:3rem;margin-bottom:20px">🔒</div>
+          <h3 style="margin-bottom:10px">Session expired</h3>
+          <p style="max-width:320px;margin:0 auto 24px">Please sign in again to view your orders.</p>
+          <a href="/login/" class="btn btn-green btn-lg">Sign In</a>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div class="order-empty">
+          <div class="empty-icon" style="font-size:3rem;margin-bottom:20px">📡</div>
+          <h3 style="margin-bottom:10px">Having trouble connecting</h3>
+          <p style="max-width:320px;margin:0 auto 24px">We couldn't reach the server. Check your connection and try again.</p>
+          <button class="btn btn-green btn-lg" onclick="location.reload()">Try Again</button>
+        </div>`;
+    }
   }
 }
 
